@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+   A stream operator, not an ordinary operation. Only valid inside a <streamSequence>, where it is a
+   transform: it wraps the byte chain in a cipher rather than mediating a message. Invoking it from a
+   sequence fails with a message pointing at pgpEncrypt.
+
+   There are deliberately no <property> mediators here, unlike the message-mediation templates in this
+   module. The pipeline does NOT mediate an operator's template - it resolves the element to an
+   InvokeMediator, takes the StreamTransform out of the <class> mediator and drives it directly - so
+   this <sequence> never executes and a <property> written here would silently never be set. The
+   parameters still reach the operator because the framework pushes a function context around the
+   call, which is why PgpStreamEncrypt reads them with lookupTemplateParamater.
+
+   The key store arrives differently again: configKey is an attribute on the pipeline stage, not a
+   parameter here. The framework mediates that local entry, which IS an ordinary template, so its own
+   <property name="name"/> runs and the operator finds the connection by that name.
+
+       <cryptography.pgpStreamEncrypt name="encrypt" configKey="partnerPublicKeys">
+           <resumeSecret>{wso2:vault-lookup('mft.pgp.resumeSecret')}</resumeSecret>
+       </cryptography.pgpStreamEncrypt>
+
+   resumeSecret is mandatory and is key material. OpenPGP encryption is randomised, so without it this
+   stage would produce different bytes on every attempt, could not declare deterministic(), and no
+   checkpointed sink could sit below it - an interrupted 1 TB transfer would restart at zero. Every
+   session key is derived from this secret and the run id, so it must be the same on every node that
+   might resume the transfer, and it must be at least 16 characters.
+
+   One instance serves every concurrent run, so the class holds nothing in a field.
+-->
+<template xmlns="http://ws.apache.org/ns/synapse" name="pgpStreamEncrypt">
+    <parameter name="resumeSecret"
+               description="Required. Key material, at least 16 characters, from the secure vault.
+                            Every session key is derived from it and the run id, which is what makes
+                            this stage reproducible and therefore resumable."/>
+    <parameter isMandatory="false" name="encryptionConfigKey"
+               description="Fallback only. The key store normally arrives as configKey on the stage."/>
+    <parameter isMandatory="false" name="symmetricKeyAlgorithm"
+               description="AES_256 (default), AES_192, AES_128, CAMELLIA_256, CAMELLIA_192,
+                            CAMELLIA_128, TWOFISH, CAST5, TRIPLE_DES, BLOWFISH, IDEA."/>
+    <parameter isMandatory="false" name="compressionAlgorithm"
+               description="UNCOMPRESSED (default here, unlike pgpEncrypt). Deflate output is
+                            deterministic only for a given runtime, so ZLIB or ZIP pins the transfer
+                            to one JVM build for resume. Transfer data is usually compressed already."/>
+    <parameter isMandatory="false" name="armor"
+               description="ASCII-armor the output. true or false (default)."/>
+    <parameter isMandatory="false" name="integrityCheck"
+               description="Add an integrity (MDC) packet. true (default) or false."/>
+    <parameter isMandatory="false" name="fileName"
+               description="Optional file name embedded in the literal-data packet."/>
+    <sequence>
+        <class name="org.wso2.carbon.connector.cryptography.pgp.stream.PgpStreamEncrypt"/>
+    </sequence>
+</template>

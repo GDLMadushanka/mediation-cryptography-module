@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+   A stream operator, not an ordinary operation. Only valid inside a <streamSequence>.
+
+       <cryptography.pgpStreamSignAndEncrypt name="protect" configKey="partnerPublicKeys">
+         <signingConfigKey>ourPrivateKeys</signingConfigKey>
+         <resumeSecret>{wso2:vault-lookup('mft.pgp.resumeSecret')}</resumeSecret>
+       </cryptography.pgpStreamSignAndEncrypt>
+
+   configKey is the recipient's public key store, exactly as on pgpStreamEncrypt, so swapping one
+   operator for the other leaves that attribute meaning the same thing. signingConfigKey names our
+   own private key connection, which this operator resolves itself because a pipeline never mediates
+   an operator's template body.
+
+   This is NOT the same as putting pgpStreamSign above pgpStreamEncrypt. An encrypting stage wraps
+   whatever it is handed in a literal packet, so that composition nests the signed message inside a
+   literal packet instead of beside it, and a partner's PGP client decrypts it to something that
+   looks like a PGP message rather than to the file. Valid OpenPGP, wrong answer. The nesting is done
+   here, in one pass.
+-->
+<template xmlns="http://ws.apache.org/ns/synapse" name="pgpStreamSignAndEncrypt">
+    <parameter isMandatory="false" name="encryptionConfigKey"
+               description="Fallback only. The recipient's public key store normally arrives as
+                            configKey on the stage."/>
+    <parameter isMandatory="true" name="signingConfigKey"
+               description="Name of the PGP Private Key connection to sign with."/>
+    <parameter isMandatory="true" name="resumeSecret"
+               description="Key material, at least 16 characters, from the secure vault. The session
+                            key, its IV and the signature nonce are all derived from it, which is
+                            what makes an interrupted transfer resumable. Keep it the same on every
+                            node that may resume the transfer."/>
+    <parameter isMandatory="false" name="passphrase"
+               description="Overrides the passphrase held by the signing connection. Use a secure expression."/>
+    <parameter isMandatory="false" name="symmetricKeyAlgorithm"
+               description="AES_256 (default), AES_192, AES_128, CAMELLIA_256, CAMELLIA_192,
+                            CAMELLIA_128, TWOFISH, CAST5, TRIPLE_DES, BLOWFISH, IDEA."/>
+    <parameter isMandatory="false" name="signatureHashAlgorithm"
+               description="SHA256 (default), SHA384, SHA512, SHA224, SHA1."/>
+    <parameter isMandatory="false" name="compressionAlgorithm"
+               description="Off unless set. ZLIB, ZIP, BZIP2 or UNCOMPRESSED (default). Compressed
+                            output is only reproducible on a matching runtime; see pgpStreamEncrypt."/>
+    <parameter isMandatory="false" name="armor"
+               description="ASCII-armor the output. true or false (default)."/>
+    <parameter isMandatory="false" name="integrityCheck"
+               description="Add an integrity (MDC) packet. true (default) or false."/>
+    <parameter isMandatory="false" name="fileName"
+               description="Optional file name embedded in the literal-data packet."/>
+    <sequence>
+        <class name="org.wso2.carbon.connector.cryptography.pgp.stream.PgpStreamSignAndEncrypt"/>
+    </sequence>
+</template>

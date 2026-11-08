@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+   A stream operator, not an ordinary operation. Only valid inside a <streamSequence>.
+
+       <cryptography.pgpStreamVerify name="check" configKey="partnerPublicKeys"/>
+
+   For a signed but NOT encrypted message - a partner who signs for authenticity over a channel that
+   is already private. pgpStreamDecrypt refuses such a message by name; point this at it instead.
+
+   One connection only, so it arrives as configKey in the ordinary way. mode works exactly as it does
+   on pgpStreamDecryptAndVerify, and for the same reason: a one-pass signature's packet sits after
+   the data, so the verdict arrives once the data has already been read.
+-->
+<template xmlns="http://ws.apache.org/ns/synapse" name="pgpStreamVerify">
+    <parameter isMandatory="false" name="verificationConfigKey"
+               description="Fallback only. The sender's public key store normally arrives as
+                            configKey on the stage."/>
+    <parameter isMandatory="false" name="mode"
+               description="strict (default) holds the message until its signature has been checked.
+                            streaming serves as it goes, and is safe only where a failed run undoes
+                            everything below this stage."/>
+    <parameter isMandatory="false" name="maxPlaintextSize"
+               description="Cap on the data held in strict mode, e.g. 50GB. Free space on the scratch
+                            volume is always enforced as well."/>
+    <parameter isMandatory="false" name="requireValidSignerKey"
+               description="true (default) refuses a signature made with a revoked or expired key,
+                            even when the signature itself is valid."/>
+    <sequence>
+        <class name="org.wso2.carbon.connector.cryptography.pgp.stream.PgpStreamVerify"/>
+    </sequence>
+</template>

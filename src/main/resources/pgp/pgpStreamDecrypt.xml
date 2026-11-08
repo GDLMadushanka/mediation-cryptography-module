@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+   A stream operator, not an ordinary operation. Only valid inside a <streamSequence>. See
+   pgpStreamEncrypt.xml for why this template carries no <property> mediators and how configKey
+   reaches the operator.
+
+       <cryptography.pgpStreamDecrypt name="decrypt" configKey="ourPrivateKeys"/>
+
+   Needs no resumeSecret: decryption is a function of its input, so the same ciphertext always gives
+   the same plaintext and the stage is deterministic without doing anything for it. A
+   download-and-decrypt pipeline therefore resumes cleanly today.
+
+   The integrity check runs when the last byte is read, because the modification detection code is a
+   trailer. A consumer that stops early never reaches it - that is what streaming costs. Every MFT
+   sink holds its output until commit, so a message that fails verification fails the run and nothing
+   is published.
+-->
+<template xmlns="http://ws.apache.org/ns/synapse" name="pgpStreamDecrypt">
+    <parameter isMandatory="false" name="decryptionConfigKey"
+               description="Fallback only. The key store normally arrives as configKey on the stage."/>
+    <parameter isMandatory="false" name="passphrase"
+               description="Overrides the passphrase held by the connection. Use a secure expression."/>
+    <parameter isMandatory="false" name="requireIntegrity"
+               description="true (default) refuses a message that carries no modification detection
+                            code, because nothing would reveal tampering. Set false only for a sender
+                            that cannot produce one."/>
+    <sequence>
+        <class name="org.wso2.carbon.connector.cryptography.pgp.stream.PgpStreamDecrypt"/>
+    </sequence>
+</template>

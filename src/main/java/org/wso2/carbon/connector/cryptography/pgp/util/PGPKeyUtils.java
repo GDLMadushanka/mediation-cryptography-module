@@ -353,7 +353,8 @@ public final class PGPKeyUtils {
      * Reject a signer's key that is untrusted: revoked, or expired at the time the signature was made.
      * Called on verify / decrypt-then-verify when {@code requireValidSignerKey} is set.
      */
-    static void validateSignerKey(PGPPublicKey signerKey, java.util.Date signatureTime) throws CryptoException {
+    public static void validateSignerKey(PGPPublicKey signerKey, java.util.Date signatureTime)
+            throws CryptoException {
         if (signerKey.hasRevocation()) {
             throw new CryptoException(CryptoError.SIGNER_KEY_UNTRUSTED,
                     "Signature rejected: the signer's key (key ID " + hex(signerKey.getKeyID()) + ") is revoked.");

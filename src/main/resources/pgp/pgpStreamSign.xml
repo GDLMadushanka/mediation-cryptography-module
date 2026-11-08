@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+   A stream operator, not an ordinary operation. Only valid inside a <streamSequence>.
+
+       <cryptography.pgpStreamSign name="sign" configKey="ourPrivateKeys">
+         <resumeSecret>{wso2:vault-lookup('mft.pgp.resumeSecret')}</resumeSecret>
+       </cryptography.pgpStreamSign>
+
+   Signs without encrypting: the producing half of the flow pgpStreamVerify reads.
+
+   Needs a resumeSecret even though nothing is encrypted. A DSA or ECDSA signature draws a random
+   nonce and would differ on every attempt, which would make this stage's output irreproducible and
+   so unresumable. RSA signatures are deterministic anyway, but the configuration should not depend
+   on which key algorithm a partner happens to have given us.
+
+   Unlike its inbound counterpart this holds nothing back: a one-pass signature is designed so the
+   signer can hash while writing and emit the signature at the end.
+-->
+<template xmlns="http://ws.apache.org/ns/synapse" name="pgpStreamSign">
+    <parameter isMandatory="false" name="signingConfigKey"
+               description="Fallback only. Our private key store normally arrives as configKey on the stage."/>
+    <parameter isMandatory="true" name="resumeSecret"
+               description="Key material, at least 16 characters, from the secure vault. Every random
+                            value this stage uses is derived from it, which is what makes an
+                            interrupted transfer resumable. Keep it the same on every node that may
+                            resume the transfer."/>
+    <parameter isMandatory="false" name="passphrase"
+               description="Overrides the passphrase held by the connection. Use a secure expression."/>
+    <parameter isMandatory="false" name="signatureHashAlgorithm"
+               description="SHA256 (default), SHA384, SHA512, SHA224, SHA1."/>
+    <parameter isMandatory="false" name="compressionAlgorithm"
+               description="Off unless set. ZLIB, ZIP, BZIP2 or UNCOMPRESSED (default). Compressed
+                            output is only reproducible on a matching runtime; see pgpStreamEncrypt."/>
+    <parameter isMandatory="false" name="armor"
+               description="ASCII-armor the output. true or false (default)."/>
+    <parameter isMandatory="false" name="fileName"
+               description="Optional file name embedded in the literal-data packet."/>
+    <sequence>
+        <class name="org.wso2.carbon.connector.cryptography.pgp.stream.PgpStreamSign"/>
+    </sequence>
+</template>

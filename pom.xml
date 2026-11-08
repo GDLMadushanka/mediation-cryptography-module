@@ -28,7 +28,8 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <connector.core.version>0.9.3</connector.core.version>
-        <synapse.version>4.0.0-wso2v149</synapse.version>
+        <synapse.version>4.1.0-wso2v68-SNAPSHOT</synapse.version>
+        <junit.version>4.13.2</junit.version>
         <bouncycastle.version>1.84</bouncycastle.version>
         <commons.io.version>2.16.1</commons.io.version>
         <commons.logging.version>1.2</commons.logging.version>
@@ -96,6 +97,12 @@
             <artifactId>commons-logging</artifactId>
             <version>${commons.logging.version}</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

@@ -11,6 +11,36 @@
             <file>pgpDecrypt.xml</file>
             <description>Decrypt the input using your PGP private key and passphrase.</description>
         </component>
+        <component name="pgpStreamEncrypt">
+            <displayName>PGP Encrypt (Stream)</displayName>
+            <file>pgpStreamEncrypt.xml</file>
+            <description>Encrypts a byte stream for a recipient as it passes. Only valid inside a streamSequence.</description>
+        </component>
+        <component name="pgpStreamDecrypt">
+            <displayName>PGP Decrypt (Stream)</displayName>
+            <file>pgpStreamDecrypt.xml</file>
+            <description>Decrypts a byte stream as it passes. Only valid inside a streamSequence.</description>
+        </component>
+        <component name="pgpStreamDecryptAndVerify">
+            <displayName>PGP Decrypt and Verify (Stream)</displayName>
+            <file>pgpStreamDecryptAndVerify.xml</file>
+            <description>Decrypts a byte stream and verifies the sender's signature, holding it back until the signature is checked. Only valid inside a streamSequence.</description>
+        </component>
+        <component name="pgpStreamSignAndEncrypt">
+            <displayName>PGP Sign and Encrypt (Stream)</displayName>
+            <file>pgpStreamSignAndEncrypt.xml</file>
+            <description>Signs a byte stream with our key and encrypts it for the recipient, in one pass. Only valid inside a streamSequence.</description>
+        </component>
+        <component name="pgpStreamSign">
+            <displayName>PGP Sign (Stream)</displayName>
+            <file>pgpStreamSign.xml</file>
+            <description>Signs a byte stream as it passes, without encrypting it. Only valid inside a streamSequence.</description>
+        </component>
+        <component name="pgpStreamVerify">
+            <displayName>PGP Verify (Stream)</displayName>
+            <file>pgpStreamVerify.xml</file>
+            <description>Verifies a signed but unencrypted byte stream, holding it back until the signature is checked. Only valid inside a streamSequence.</description>
+        </component>
         <component name="pgpSign">
             <displayName>PGP Sign</displayName>
             <file>pgpSign.xml</file>

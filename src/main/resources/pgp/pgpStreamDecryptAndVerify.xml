@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+   A stream operator, not an ordinary operation. Only valid inside a <streamSequence>.
+
+       <cryptography.pgpStreamDecryptAndVerify name="open" configKey="ourPrivateKeys">
+         <verificationConfigKey>partnerPublicKeys</verificationConfigKey>
+       </cryptography.pgpStreamDecryptAndVerify>
+
+   Two connections. configKey on the stage is our own private key store, the one the framework
+   mediates while binding; verificationConfigKey names the sender's public key store, which this
+   operator resolves itself because a pipeline never mediates an operator's template body.
+
+   mode=strict, the default, holds the whole message in scratch until the signature has been checked,
+   so a forged file changes nothing downstream - not even a forEach's side effects, which no amount
+   of abort() can undo. mode=streaming serves as it goes and is the right choice when the pipeline
+   only moves bytes into a sink that publishes at commit; it is roughly twice as fast there, because
+   the decrypt and the write overlap again.
+-->
+<template xmlns="http://ws.apache.org/ns/synapse" name="pgpStreamDecryptAndVerify">
+    <parameter isMandatory="false" name="decryptionConfigKey"
+               description="Fallback only. Our private key store normally arrives as configKey on the stage."/>
+    <parameter isMandatory="true" name="verificationConfigKey"
+               description="Name of the PGP Public Key connection holding the sender's key. Without
+                            it there is nothing to check the signature against."/>
+    <parameter isMandatory="false" name="passphrase"
+               description="Overrides the passphrase held by the connection. Use a secure expression."/>
+    <parameter isMandatory="false" name="mode"
+               description="strict (default) holds the message until its signature has been checked.
+                            streaming serves as it goes, and is safe only where a failed run undoes
+                            everything below this stage."/>
+    <parameter isMandatory="false" name="maxPlaintextSize"
+               description="Cap on the plaintext held in strict mode, e.g. 50GB. A small OpenPGP
+                            message can decompress to an enormous one, and in strict mode it lands
+                            on this node's disk before it has been verified. Free space on the
+                            scratch volume is always enforced as well."/>
+    <parameter isMandatory="false" name="requireIntegrity"
+               description="true (default) refuses a message that carries no modification detection
+                            code."/>
+    <parameter isMandatory="false" name="requireValidSignerKey"
+               description="true (default) refuses a signature made with a revoked or expired key,
+                            even when the signature itself is valid."/>
+    <sequence>
+        <class name="org.wso2.carbon.connector.cryptography.pgp.stream.PgpStreamDecryptAndVerify"/>
+    </sequence>
+</template>
